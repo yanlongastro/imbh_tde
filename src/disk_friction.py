@@ -8,9 +8,16 @@ c = Constants()
 
 def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs, ):
     """
-    returns dE/E
+    returns dE/E per orbit
     dE: energy loss due to tidal disspation near the BH
     E: defined as G*Mbh*Ms/(2*rp), the energy required at the circular orbit of rp
+    ------------
+    rp: pericenter distance in cgs
+    sma: semi-major axis in cgs
+    Mbh: mass of the black hole in cgs
+    Ms: mass of the star in cgs
+    Rs: stellar radius in cgs
+    ------------
     """
     rt = 1*(Mbh/Ms)**(1./3.)*Rs  # tidal radius
     # rp = (rp>rt)*rp + (rp<=rt)*rt  # rp should be larger than Rs
@@ -41,6 +48,17 @@ def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs, ):
     return dE_E*(c2+c3)
 
 def ome_root_disk(one_minus_ecc, s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):    
+    """
+    for given semi-major axis and eccentricy, returns the change in the energy 
+    ------------
+    one_minus_ecc: 1-eccentricity, the eccentricity of the orbit
+    s: star_disk object, contains the disk parameters
+    sma: semi-major axis of the orbit
+    Rs: stellar radius in cgs
+    Ms: stellar mass in cgs
+    tdisk: disk lifetime in cgs, default 1e6 years
+    tidal_capture: whether to include the tidal capture effect
+    """
     Norb=tdisk/s.n.P(sma)
     dm_o_ms = (s.d.sigma(sma*one_minus_ecc)*np.pi*Rs**2 / Ms)
     DeltaEoEcirc = 4* dm_o_ms
@@ -49,16 +67,51 @@ def ome_root_disk(one_minus_ecc, s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=Tru
     return Norb*DeltaEoEcirc - 1.0
 
 def one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
+    """
+    returns the critical one_minus_eccentricity for the loss cone
+    ------------
+    s: star_disk object, contains the disk parameters
+    sma: semi-major axis of the orbit
+    Rs: stellar radius in cgs
+    Ms: stellar mass in cgs
+    tdisk: disk lifetime in cgs, default 1e6 years
+    tidal_capture: whether to include the tidal capture effect
+    ------------
+    """
     try:
         return bisect(ome_root_disk,1.e-30,1,args=(s, sma,Rs,Ms,tdisk, tidal_capture)) 
     except:
         return 1.0
 
 def r_lc_disk(sma, s, Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
+    """
+    returns the loss cone radius for the disk
+    ------------
+    sma: semi-major axis of the orbit
+    s: star_disk object, contains the disk parameters
+    Rs: stellar radius in cgs
+    Ms: stellar mass in cgs
+    tdisk: disk lifetime in cgs, default 1e6 years
+    tidal_capture: whether to include the tidal capture effect
+    ------------
+    """
     return sma*one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk, tidal_capture)
 r_lc_disk = np.vectorize(r_lc_disk)
 
 def r_lc_mixed(sma, s, Rs, Ms, Mbh,tdisk=1.e6*c.yr, tidal_capture=True, binary_seperation_in_solar=None):
+    """
+    returns the redefined loss cone radius, which is the larger of the disk lc and the tidal lc
+    ------------
+    sma: semi-major axis of the orbit
+    s: star_disk object, contains the disk parameters
+    Rs: stellar radius in cgs
+    Ms: stellar mass in cgs
+    Mbh: mass of the black hole in cgs
+    tdisk: disk lifetime in cgs, default 1e6 years
+    tidal_capture: whether to include the tidal capture effect
+    binary_seperation_in_solar
+    ------------
+    """
     # r_lc = max(r_t, r_lc_disk)
     rd = sma*one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk, tidal_capture)
     rt = 1*(Mbh/Ms)**(1./3.)*Rs
@@ -188,7 +241,7 @@ def R0_disk(E, s, rlc, Rs, Ms, rp_in_rlc=1):
 
 import sys
 sys.path.append('/Users/yanlong/Library/CloudStorage/OneDrive-Personal/Science/MyCode')
-from sylpy import stellar_evolution as se
+from sylpy import stellar_evolution as se # or check https://github.com/yanlongastro/sylpy/blob/main/stellar_evolution.py
 from star_disk import star_disk
 from scipy import integrate
 
