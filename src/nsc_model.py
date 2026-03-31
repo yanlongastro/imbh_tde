@@ -25,12 +25,25 @@ class nsc_model:
         self.r_m = rm_o_rh*self.r_h  # encloses 2Mbh
         if ms_mean is None:
             self.n_m = (mrm_o_mbh/2.)*(3-self.gamma)/(2*np.pi) *(self.Mbh/self.ms)*self.r_m**-3  # Merritt eq 3.48
+            self.ms_mean = self.ms
         else:
             self.n_m = (mrm_o_mbh/2.)*(3-self.gamma)/(2*np.pi) *(self.Mbh/self.ms_mean)*self.r_m**-3  # if given, this is the ``real'' number density of stars for a given IMF
         self.mrm_o_mbh = mrm_o_mbh
         self.phi0 = (self.c.G*self.Mbh/self.r_m)
         self.f0 = ((2*np.pi)**-1.5 * self.n_m * self.phi0**-self.gamma 
                    *scipy.special.gamma(self.gamma+1.)/scipy.special.gamma(self.gamma-0.5) )  # vasiliev & merritt 2013
+        
+    def mbh_dot_estimate(self, rlc, Mbh_o_Mstar=0.01):
+        """
+        Rough estimate for mdot based on G*Mh^2/Rh/t_rlx ~ G*Mbh*Mbh_dot/rlc
+        """
+        Mh = self.Mbh/Mbh_o_Mstar
+        Rh = self.c.G*Mh/self.sigma_h**2
+        trlx = 0.4 *(Mh/self.ms_mean)/np.log(Mh/self.ms_mean) *Rh/self.sigma_h
+        print(Mh/self.c.msun, Rh/self.c.pc, trlx/self.c.yr)
+        Edot = Mh**2/Rh /trlx
+        mdot = Edot/(self.Mbh/rlc)
+        return mdot
         
     def rho(self,r):
         """ Stellar mass density as a function of radius  """
@@ -133,7 +146,7 @@ class nsc_model:
         
         rt = 1*(self.Mbh/self.ms)**(1./3.)*1*self.c.rsun
 
-        alist = np.logspace(np.log10(self.r_h/self.c.pc)+2,np.log10(self.r_h/self.c.pc)-4)*self.c.pc
+        alist = np.logspace(np.log10(self.r_h/self.c.pc),np.log10(self.r_h/self.c.pc)-4)*self.c.pc
 
         plt.plot(self.E(alist)/self.E(self.r_h),self.flux_flc(self.E(alist),rt)*self.E(alist)*self.c.yr,color='grey',ls="--")
         plt.plot(self.E(alist)/self.E(self.r_h),self.flux_lc(self.E(alist),rt)*self.E(alist)*self.c.yr)
