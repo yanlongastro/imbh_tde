@@ -21,6 +21,10 @@ class nsc_model:
             self.sigma_h = 2.3e5*(self.Mbh/self.c.msun)**(1./4.38)  # Kormendy, MacLeod 2014
         else:
             self.sigma_h = sigma_h
+        self._GMbh = self.c.G * self.Mbh
+        self._GMbh_over_2 = 0.5 * self._GMbh
+        self._inv_sqrt_GMbh = self._GMbh**-0.5
+        self._two_pi_over_sqrt_GMbh = 2.0 * np.pi * self._inv_sqrt_GMbh
         self.r_h = self.c.G * self.Mbh/self.sigma_h**2 # sphere of influence
         self.r_m = rm_o_rh*self.r_h  # encloses 2Mbh
         if ms_mean is None:
@@ -56,7 +60,7 @@ class nsc_model:
     def sigma(self,r):
         """ Stellar velocity dispersion as a function of radius  """
         #return np.sqrt(self.c.G * self.Mbh /((1+self.gamma)*r) + self.sigma_h**2) # eq 3.63a, includes flattening outside r_h
-        return np.sqrt(self.c.G * self.Mbh /((1+self.gamma)*r) )   # keplerian regime
+        return np.sqrt(self._GMbh /((1+self.gamma)*r) )   # keplerian regime
   
     def t_r(self,r):
         """ two-body relaxation timescale (r)  """
@@ -65,19 +69,19 @@ class nsc_model:
     
     def P(self,r):
         """ orbital period given SMA """
-        return 2*np.pi*np.sqrt( r**3/(self.c.G*(self.Mbh)) )
+        return self._two_pi_over_sqrt_GMbh * r**1.5
     
     def E(self,r):
         """ orbital energy given SMA  """
-        return self.c.G*(self.Mbh)/(2.*r)
+        return self._GMbh_over_2 / r
     
     def a(self,E):
         """ orbital SMA given energy """
-        return self.c.G*(self.Mbh)/(2.*E)
+        return self._GMbh_over_2 / E
     
     def Jc(self,r):
         """ circular angular momentum given SMA """
-        return np.sqrt(self.c.G*self.Mbh*r)
+        return np.sqrt(self._GMbh * r)
         
     def DeltaErms(self,r):
         """ RMS Delta Energy over one orbital period from two-body relaxation """
@@ -94,7 +98,7 @@ class nsc_model:
     def Jlc(self,E,rlc):
         """Loss cone angular momentum given Energy, periapse radius of loss cone
            approximately equal to sqrt(2*G*Mbh*rlc)"""
-        return np.sqrt(2*rlc**2 * (self.c.G*self.Mbh/rlc - E) )
+        return np.sqrt(2*rlc**2 * (self._GMbh/rlc - E) )
     
     def qE(self,E,rlc):
         """ ratio of per orbit scatter to loss cone angular momentum; MacLeod2012"""

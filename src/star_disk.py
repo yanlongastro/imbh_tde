@@ -97,9 +97,14 @@ class disk_envelope:
         if gamma_disk>3:
             self.rho0 = (gamma_disk-3)/(np.pi*4*2) *Mdisk/(self.rh**3)
             self.rmax = np.inf
+        self._sigma0 = 2.0 * self.rho0 * self.rh**self.gamma_disk
+        self._rho0_rh_gamma = self.rho0 * self.rh**self.gamma_disk
+
     def rho(self, r):
         """Density profile of the disk envelope"""
-        return (r<self.rmax)*self.rho0 * (r/self.rh)**(-self.gamma_disk)
+        if r >= self.rmax:
+            return 0.0
+        return self._rho0_rh_gamma * r**(-self.gamma_disk)
     
     def h(self, r):
         """Scale height of the disk envelope"""
@@ -107,7 +112,9 @@ class disk_envelope:
     
     def sigma(self, r):
         """Surface density of the disk envelope"""
-        return self.rho(r) * self.h(r)*2
+        if r >= self.rmax:
+            return 0.0
+        return self._sigma0 * r**(1.0 - self.gamma_disk)
     
 
 class orbit:
@@ -269,5 +276,4 @@ class star_disk:
         return dE,E0,dh,h0
 
  
-
 
