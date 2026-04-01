@@ -98,8 +98,8 @@ def _deltae_o_ecirc_tidal_capture_scalar(rp, sma, Mbh, Ms, Rs):
     if not np.isfinite(dE_E):
         return np.inf
 
-    log10_coeff_max = max(log10_c2, log10_c3)
-    log10_coeff_min = min(log10_c2, log10_c3)
+    log10_coeff_max = log10_c2 if log10_c2 >= log10_c3 else log10_c3
+    log10_coeff_min = log10_c3 if log10_c2 >= log10_c3 else log10_c2
     if log10_coeff_max >= _LOG10_MAX_FLOAT:
         return np.inf
 
@@ -107,7 +107,9 @@ def _deltae_o_ecirc_tidal_capture_scalar(rp, sma, Mbh, Ms, Rs):
     if log10_coeff_min > -np.inf:
         coeff_sum *= 1.0 + 10**(log10_coeff_min - log10_coeff_max)
 
-    if coeff_sum > _MAX_FLOAT / max(abs(dE_E), 1.0):
+    abs_dE_E = abs(dE_E)
+    scale = abs_dE_E if abs_dE_E >= 1.0 else 1.0
+    if coeff_sum > _MAX_FLOAT / scale:
         return np.inf
     return dE_E * coeff_sum
 
@@ -125,7 +127,26 @@ def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs, ):
     Rs: stellar radius in cgs
     ------------
     """
-    return _deltae_o_ecirc_tidal_capture_scalar(rp, sma, Mbh, Ms, Rs)
+    rp_arr = np.asarray(rp)
+    sma_arr = np.asarray(sma)
+    if rp_arr.ndim == 0 and sma_arr.ndim == 0:
+        return _deltae_o_ecirc_tidal_capture_scalar(
+            float(rp_arr), float(sma_arr), float(Mbh), float(Ms), float(Rs)
+        )
+
+    rp_b, sma_b = np.broadcast_arrays(rp_arr, sma_arr)
+    result = np.empty(rp_b.shape, dtype=float)
+    flat_rp = rp_b.reshape(-1)
+    flat_sma = sma_b.reshape(-1)
+    flat_result = result.reshape(-1)
+    Mbh_f = float(Mbh)
+    Ms_f = float(Ms)
+    Rs_f = float(Rs)
+    for i in range(flat_rp.size):
+        flat_result[i] = _deltae_o_ecirc_tidal_capture_scalar(
+            float(flat_rp[i]), float(flat_sma[i]), Mbh_f, Ms_f, Rs_f
+        )
+    return result
 
 def ome_root_disk(one_minus_ecc, s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):    
     """
