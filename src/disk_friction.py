@@ -114,10 +114,10 @@ def _deltae_o_ecirc_tidal_capture_scalar(rp, sma, Mbh, Ms, Rs):
     return dE_E * coeff_sum
 
 
-def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs, ):
+def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs):
     """
     returns dE/E per orbit
-    dE: energy loss due to tidal disspation near the BH
+    dE: energy loss due to tidal dissipation near the BH
     E: defined as G*Mbh*Ms/(2*rp), the energy required at the circular orbit of rp
     ------------
     rp: pericenter distance in cgs
@@ -148,9 +148,10 @@ def DeltaE_o_Ecirc_tidal_capture(rp, sma, Mbh, Ms, Rs, ):
         )
     return result
 
-def ome_root_disk(one_minus_ecc, s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):    
+
+def ome_root_disk(one_minus_ecc, s, sma, Rs, Ms, tdisk=1.e6*c.yr, tidal_capture=True):
     """
-    for given semi-major axis and eccentricy, returns the change in the energy 
+    for given semi-major axis and eccentricity, returns the change in the energy
     ------------
     one_minus_ecc: 1-eccentricity, the eccentricity of the orbit
     s: star_disk object, contains the disk parameters
@@ -160,16 +161,16 @@ def ome_root_disk(one_minus_ecc, s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=Tru
     tdisk: disk lifetime in cgs, default 1e6 years
     tidal_capture: whether to include the tidal capture effect
     """
-    Norb=tdisk/s.n.P(sma)
-    dm_o_ms = (s.d.sigma(sma*one_minus_ecc)*np.pi*Rs**2 / Ms)
-    DeltaEoEcirc = 4* dm_o_ms
-    if tidal_capture: # add tidal interaction loss
-        DeltaEoEcirc += DeltaE_o_Ecirc_tidal_capture(sma*one_minus_ecc, sma, s.n.Mbh, Ms, Rs, )
+    Norb = tdisk / s.n.P(sma)
+    dm_o_ms = (s.d.sigma(sma * one_minus_ecc) * np.pi * Rs**2 / Ms)
+    DeltaEoEcirc = 4 * dm_o_ms
+    if tidal_capture:
+        DeltaEoEcirc += DeltaE_o_Ecirc_tidal_capture(sma * one_minus_ecc, sma, s.n.Mbh, Ms, Rs)
     if not np.isfinite(Norb) or not np.isfinite(DeltaEoEcirc):
         return np.inf
     if DeltaEoEcirc > _MAX_FLOAT / max(abs(Norb), 1.0):
         return np.inf
-    return Norb*DeltaEoEcirc - 1.0
+    return Norb * DeltaEoEcirc - 1.0
 
 
 def log_ome_root_disk(log10_one_minus_ecc, s, sma, Rs, Ms, tdisk=1.e6*c.yr, tidal_capture=True):
@@ -206,7 +207,7 @@ def _make_ome_root_disk_func(s, sma, Rs, Ms, tdisk, tidal_capture):
     return root_func
 
 
-def one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
+def one_minus_ecc_lc_disk(s, sma, Rs, Ms, tdisk=1.e6*c.yr, tidal_capture=True):
     """
     returns the critical one_minus_eccentricity for the loss cone
     ------------
@@ -278,7 +279,7 @@ def _wrap_binary_scalar(scalar_func, arg1, arg2):
 
 
 # Loss-cone radii
-def _r_lc_disk_scalar(sma, s, Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
+def _r_lc_disk_scalar(sma, s, Rs, Ms, tdisk=1.e6*c.yr, tidal_capture=True):
     """
     returns the loss cone radius for the disk
     ------------
@@ -290,10 +291,10 @@ def _r_lc_disk_scalar(sma, s, Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
     tidal_capture: whether to include the tidal capture effect
     ------------
     """
-    return sma*one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk, tidal_capture)
+    return sma * one_minus_ecc_lc_disk(s, sma, Rs, Ms, tdisk, tidal_capture)
 
 
-def r_lc_disk(sma, s, Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
+def r_lc_disk(sma, s, Rs, Ms, tdisk=1.e6*c.yr, tidal_capture=True):
     sma_arr = np.asarray(sma)
     if sma_arr.ndim == 0:
         return _r_lc_disk_scalar(sma_arr.item(), s, Rs, Ms, tdisk, tidal_capture)
@@ -305,7 +306,8 @@ def r_lc_disk(sma, s, Rs,Ms,tdisk=1.e6*c.yr, tidal_capture=True):
     return result
 
 
-def _r_lc_mixed_scalar(sma, s, Rs, Ms, Mbh,tdisk=1.e6*c.yr, tidal_capture=True, binary_seperation_in_solar=None):
+def _r_lc_mixed_scalar(sma, s, Rs, Ms, Mbh, tdisk=1.e6*c.yr, tidal_capture=True,
+                        binary_seperation_in_solar=None):
     """
     returns the redefined loss cone radius, which is the larger of the disk lc and the tidal lc
     ------------
@@ -319,16 +321,16 @@ def _r_lc_mixed_scalar(sma, s, Rs, Ms, Mbh,tdisk=1.e6*c.yr, tidal_capture=True, 
     binary_seperation_in_solar
     ------------
     """
-    # r_lc = max(r_t, r_lc_disk)
-    rd = sma*one_minus_ecc_lc_disk(s, sma,Rs,Ms,tdisk, tidal_capture)
-    rt = 1*(Mbh/Ms)**(1./3.)*Rs
+    rd = sma * one_minus_ecc_lc_disk(s, sma, Rs, Ms, tdisk, tidal_capture)
+    rt = 1 * (Mbh / Ms)**(1./3.) * Rs
     if binary_seperation_in_solar is not None:
-            rt *= binary_seperation_in_solar # larger TDE radius for binaries
-    rg = 2*c.G*Mbh/(c.c**2)  # Schwarzschild radius
+        rt *= binary_seperation_in_solar
+    rg = 2 * c.G * Mbh / (c.c**2)
     return max(rd, rt, rg)
 
 
-def r_lc_mixed(sma, s, Rs, Ms, Mbh,tdisk=1.e6*c.yr, tidal_capture=True, binary_seperation_in_solar=None):
+def r_lc_mixed(sma, s, Rs, Ms, Mbh, tdisk=1.e6*c.yr, tidal_capture=True,
+               binary_seperation_in_solar=None):
     sma_arr = np.asarray(sma)
     if sma_arr.ndim == 0:
         return _r_lc_mixed_scalar(
@@ -345,9 +347,10 @@ def r_lc_mixed(sma, s, Rs, Ms, Mbh,tdisk=1.e6*c.yr, tidal_capture=True, binary_s
 
 
 # Angular-momentum integrals and fluxes
-def fR_frac(R,R0):
-    tol=1e-50
-    return np.where(R0>tol,np.log(R/R0)/(np.log(1/R0)-1.0+R0),1.0)
+def fR_frac(R, R0):
+    tol = 1e-50
+    return np.where(R0 > tol, np.log(R / R0) / (np.log(1 / R0) - 1.0 + R0), 1.0)
+
 
 def fR_frac_integral(R_min, R_max, R0):
     """
@@ -390,22 +393,22 @@ def _fR_frac_integral_array(R_min, R_max, R0):
         ) / norm
     return result
 
+
 def _flux_lc_disk_scalar(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True):
     """flux into the TDE lc in the presence of a disk"""
-    # disk loss cone radius, and R0
     rlcd = _r_lc_disk_scalar(s.n.a(E), s, s.rs, s.ms, tdisk, tidal_capture)
-    Rlc_disk = s.n.Rlc(E,rlcd)
-    R0_d = s.n.R0(E,rlcd)
-    R0_t = s.n.R0(E,rlc_tidal)
-    R0 = max(R0_d,R0_t)
-    Rlc_tidal = s.n.Rlc(E,rlc_tidal)
-    
-    if (R0_d>=Rlc_tidal):
+    Rlc_disk = s.n.Rlc(E, rlcd)
+    R0_d = s.n.R0(E, rlcd)
+    R0_t = s.n.R0(E, rlc_tidal)
+    R0 = max(R0_d, R0_t)
+    Rlc_tidal = s.n.Rlc(E, rlc_tidal)
+
+    if R0_d >= Rlc_tidal:
         return 0.0
     else:
         ang_int = fR_frac_integral(R0, Rlc_tidal, R0)
-        fE = ang_int * s.n.fE(E) * (1-R0) # last term, depletion by disk
-        return 4.*np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE 
+        fE = ang_int * s.n.fE(E) * (1 - R0)
+        return 4. * np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE
 
 
 def flux_lc_disk(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True):
@@ -420,24 +423,25 @@ def flux_lc_disk(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True):
         flat_result[i] = _flux_lc_disk_scalar(flat_E[i].item(), s, flat_rlc[i].item(), tdisk, tidal_capture)
     return result
 
+
 def _flux_lc_mixed_scalar(E, s, rlc, tde=False):
     """flux into the TDE lc + disk lc"""
-    # disk loss cone radius, and R0
     if not tde:
-        Rlc_disk = s.n.Rlc(E,rlc)
+        Rlc_disk = s.n.Rlc(E, rlc)
     else:
-        rt = 1*(s.Mbh/s.ms)**(1./3.)*s.rs  # specify the tidal radius
-        rg = 2*c.G*s.Mbh/(c.c**2)
-        if rt<rg: return 0.0
+        rt = 1 * (s.Mbh / s.ms)**(1./3.) * s.rs
+        rg = 2 * c.G * s.Mbh / (c.c**2)
+        if rt < rg:
+            return 0.0
         Rlc_disk = s.n.Rlc(E, rt)
-    R0 = s.n.R0(E,rlc)
-    
-    if (R0>=Rlc_disk):
+    R0 = s.n.R0(E, rlc)
+
+    if R0 >= Rlc_disk:
         return 0.0
     else:
         ang_int = fR_frac_integral(R0, Rlc_disk, R0)
-        fE = ang_int * s.n.fE(E) * (1-R0) # last term, depletion by disk
-        return 4.*np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE 
+        fE = ang_int * s.n.fE(E) * (1 - R0)
+        return 4. * np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE
 
 
 def flux_lc_mixed(E, s, rlc, tde=False):
@@ -452,25 +456,26 @@ def flux_lc_mixed(E, s, rlc, tde=False):
         flat_result[i] = _flux_lc_mixed_scalar(flat_E[i].item(), s, flat_rlc[i].item(), tde)
     return result
 
+
 def _flux_lc_mixed_scalar_integrand(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True, tde=False):
     """flux into the TDE lc + disk lc; the version for integration"""
-    # disk loss cone radius, and R0
     rlcd = _r_lc_disk_scalar(s.n.a(E), s, s.rs, s.ms, tdisk, tidal_capture)
-    rg = 2*c.G*s.Mbh/(c.c**2)  # Schwarzschild radius
+    rg = 2 * c.G * s.Mbh / (c.c**2)
     rlc = max(rlc_tidal, rlcd, rg)
     if not tde:
-        Rlc_disk = s.n.Rlc(E,rlc)
+        Rlc_disk = s.n.Rlc(E, rlc)
     else:
-        Rlc_disk = s.n.Rlc(E,rlc_tidal)
-        if rlc_tidal<rg: return 0.0
-    R0 = s.n.R0(E,rlc)
-    
-    if (R0>=Rlc_disk):
+        Rlc_disk = s.n.Rlc(E, rlc_tidal)
+        if rlc_tidal < rg:
+            return 0.0
+    R0 = s.n.R0(E, rlc)
+
+    if R0 >= Rlc_disk:
         return 0.0
     else:
         ang_int = fR_frac_integral(R0, Rlc_disk, R0)
-        fE = ang_int * s.n.fE(E) * (1-R0) # last term, depletion by disk
-        return 4.*np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE 
+        fE = ang_int * s.n.fE(E) * (1 - R0)
+        return 4. * np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE
 
 
 def flux_lc_mixed_(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True, tde=False):
@@ -488,13 +493,22 @@ def flux_lc_mixed_(E, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True, tde=Fals
     return result
 
 
-def _flux_lc_mixed_grid(E_grid, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True, tde=False):
+def _flux_lc_mixed_grid(E_grid, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True,
+                         tde=False, precomputed_rlcd=None):  # OPT: new param
     """
     Grid-oriented version of flux_lc_mixed_ that reuses array computations across E.
+    precomputed_rlcd: optional array of r_lc_disk values already computed on this
+                      sma grid, bypassing the per-point brentq solves entirely.
     """
     E_grid = np.asarray(E_grid, dtype=float)
     a_grid = s.n.a(E_grid)
-    rlcd_grid = r_lc_disk(a_grid, s, s.rs, s.ms, tdisk, tidal_capture)
+
+    # OPT: use caller-supplied rlcd to skip 101 brentq solves
+    if precomputed_rlcd is not None:
+        rlcd_grid = np.asarray(precomputed_rlcd, dtype=float)
+    else:
+        rlcd_grid = r_lc_disk(a_grid, s, s.rs, s.ms, tdisk, tidal_capture)
+
     rg = 2 * c.G * s.Mbh / (c.c**2)
     rlc_grid = np.maximum(np.maximum(rlc_tidal, rlcd_grid), rg)
 
@@ -522,14 +536,13 @@ def _flux_lc_mixed_grid(E_grid, s, rlc_tidal, tdisk=1e6*c.yr, tidal_capture=True
 
 
 def _flux_lc_tidal_scalar(E, s, rlc_tidal):
-    """Flux into a normal lc, eg the tidal lc"""
-    # TDE loss cone radius, and R0
-    R0 = s.n.R0(E,rlc_tidal)
-    Rlc_tidal = s.n.Rlc(E,rlc_tidal)
-    
+    """Flux into a normal lc, e.g. the tidal lc"""
+    R0 = s.n.R0(E, rlc_tidal)
+    Rlc_tidal = s.n.Rlc(E, rlc_tidal)
+
     ang_int = fR_frac_integral(R0, Rlc_tidal, R0)
     fE = s.n.fE(E) * ang_int
-    return 4.*np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE 
+    return 4. * np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE
 
 
 def flux_lc_tidal(E, s, rlc_tidal):
@@ -545,26 +558,23 @@ def flux_lc_tidal(E, s, rlc_tidal):
     return result
 
 
-
 def _flux_lc_diskcap_scalar(E, s, rlc_tidal, tidal_capture=True):
     """flux into the disk capture LC in the presence of a disk"""
-    # disk loss cone radius, and R0
     rlcd = _r_lc_disk_scalar(s.n.a(E), s, s.rs, s.ms, 1.e6*c.yr, tidal_capture)
-    Rlc_disk = s.n.Rlc(E,rlcd)
-    R0_d = s.n.R0(E,rlcd)
-    rt = 1*(s.Mbh/s.ms)**(1./3.)*s.rs
-    R0_t = s.n.R0(E,rt)
-    R0 = max(R0_d,R0_t)
-    Rlc_tidal = s.n.Rlc(E,rlc_tidal)
-    Rmin = max(R0,Rlc_tidal)
-    
-    if (Rlc_tidal >= Rlc_disk):
+    Rlc_disk = s.n.Rlc(E, rlcd)
+    R0_d = s.n.R0(E, rlcd)
+    rt = 1 * (s.Mbh / s.ms)**(1./3.) * s.rs
+    R0_t = s.n.R0(E, rt)
+    R0 = max(R0_d, R0_t)
+    Rlc_tidal = s.n.Rlc(E, rlc_tidal)
+    Rmin = max(R0, Rlc_tidal)
+
+    if Rlc_tidal >= Rlc_disk:
         return 0.0
     else:
         ang_int = fR_frac_integral(Rmin, Rlc_disk, R0)
-        fE = ang_int * s.n.fE(E) * (1-R0) 
-        # last term, depletion by disk of overall normalization
-        return 4.*np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE 
+        fE = ang_int * s.n.fE(E) * (1 - R0)
+        return 4. * np.pi**2 * s.n.Jc(s.n.a(E))**2 * fE
 
 
 def flux_lc_diskcap(E, s, rlc_tidal, tidal_capture=True):
@@ -582,60 +592,66 @@ def flux_lc_diskcap(E, s, rlc_tidal, tidal_capture=True):
 
 # Energy integration and IMF-averaged rates
 def simpson_integrate_flux_lc_mixed(E_min, E_max, s, rlc_tidal, tdisk=1e6*c.yr,
-                                    tidal_capture=True, tde=False, nE=101):
+                                     tidal_capture=True, tde=False, nE=101,
+                                     precomputed_rlcd=None):  # OPT: new param
     """
     Fixed-grid Simpson integration of flux_lc_mixed_ over energy.
-    Uses the same integrand and bounds as the previous quad-based version.
+    precomputed_rlcd: optional array of r_lc_disk already evaluated on the nE-point
+                      sma grid corresponding to E_grid, skipping brentq solves.
     """
     if E_max <= E_min:
         return 0.0
     if nE % 2 == 0:
         nE += 1
     E_grid = np.geomspace(E_min, E_max, nE)
-    flux_grid = _flux_lc_mixed_grid(E_grid, s, rlc_tidal, tdisk, tidal_capture, tde)
+    flux_grid = _flux_lc_mixed_grid(
+        E_grid, s, rlc_tidal, tdisk, tidal_capture, tde,
+        precomputed_rlcd=precomputed_rlcd,  # OPT: forward to grid function
+    )
     return integrate.simpson(flux_grid, x=E_grid)
+
 
 # Disk-friction diffusion coefficient
 def R0_disk(E, s, rlc, Rs, Ms, rp_in_rlc=1):
-    q = s.n.qE(E, rlc) # two-body relaxation
-    
-    # then we calculate the disk friction
-    rp = rlc*rp_in_rlc
-    dm_o_ms = (s.d.sigma(rp)*np.pi*Rs**2 / Ms)
-    q_ = (dm_o_ms)**2 *(rp/rlc)
-    # add them up, and get the R0
+    q = s.n.qE(E, rlc)
+
+    rp = rlc * rp_in_rlc
+    dm_o_ms = (s.d.sigma(rp) * np.pi * Rs**2 / Ms)
+    q_ = (dm_o_ms)**2 * (rp / rlc)
     q += q_
     alpha = (q**4 + q**2)**0.25
-    
-    #alpha = (q>=1)*q + (q<1)*(0.186*q+0.824*q**0.5) # Cohn & Kulsrud approximation
-    
-    return s.n.Rlc(E,rlc)*np.exp(-alpha)
-def Flc_imf(imf, Mbh=1e3*c.msun, nbin=50, lambda_disk=1, mass_weighted=False, Mdisk=None, tdisk=1e6*c.yr, gamma=1.5,
-            gamma_disk=None, rmax_in_rh=None, sigma_h=None, full_loss_cone=False, tidal_capture=True, tde=False, 
-            binary_mass_in_solar=None, binary_seperation_in_solar=None, nE=101):
+
+    return s.n.Rlc(E, rlc) * np.exp(-alpha)
+
+
+def Flc_imf(imf, Mbh=1e3*c.msun, nbin=50, lambda_disk=1, mass_weighted=False,
+            Mdisk=None, tdisk=1e6*c.yr, gamma=1.5, gamma_disk=None,
+            rmax_in_rh=None, sigma_h=None, full_loss_cone=False,
+            tidal_capture=True, tde=False, binary_mass_in_solar=None,
+            binary_seperation_in_solar=None, nE=101):
     """
     returns:
     - semi-major axis of the orbits considered in calculation
     - the flux, as a function of semi-major axis: dF/dE, in 1/yr/(m/s)^2; or Msun/yr/(m/s)^2 if mass_weighted
-    - the flux intergrated over energy, in 1/(yr), or Msun/yr is mass_weighted
+    - the flux integrated over energy, in 1/(yr), or Msun/yr if mass_weighted
     - the nsc model class used here
     - masses of the stars, if an IMF is given
     - the flux as a function of mass: dF/dm
     ----------
-    Mbh : centeral BH mass in cgs
+    Mbh : central BH mass in cgs
     nbin : bins of the imf
-    lambda_disk : 
+    lambda_disk :
     mass_weighted : if true, we get the mass flux, otherwise we get the event rate
     Mdisk : disk mass in cgs
     tdisk : disk lifetime in cgs
-    gamma : density slope of the cluster inside the BH influcence, can be a function of stellar mass
+    gamma : density slope of the cluster inside the BH influence, can be a function of stellar mass
     gamma_disk : density slope of the spherical disk outside the tidal radius
     rmax_in_rh : how far the spherical disk extends, in half-mass radius
-    sigma_h : velocity dispersion around the BH, if None, use the Komendy & Ho 2013
+    sigma_h : velocity dispersion around the BH, if None, use the Kormendy & Ho 2013
     full_loss_cone : special case that returns the full loss cone solution
     tidal_capture : whether to include the tidal capture effect
-    tde : if True, return the TDE rate assuming stars in the disk are abalted; otherwise return the total rates
-    binary_mass_in_solar : speical case for binary distribution functions
+    tde : if True, return the TDE rate assuming stars in the disk are ablated; otherwise return the total rates
+    binary_mass_in_solar : special case for binary distribution functions
     binary_seperation_in_solar: only for binaries
     nE : number of energy samples for Simpson integration of the total rate
     """
@@ -650,7 +666,7 @@ def Flc_imf(imf, Mbh=1e3*c.msun, nbin=50, lambda_disk=1, mass_weighted=False, Md
         imf_fracs = None
     else:
         m_list = np.logspace(np.log10(imf.m_min), np.log10(imf.m_max), num=nbin+1)
-        ms_mean = imf.mean_mass*c.msun
+        ms_mean = imf.mean_mass * c.msun
         mass_bins = np.sqrt(m_list[:-1] * m_list[1:])
         imf_fracs = np.array(
             [imf.imf_integral(m_list[i], m_list[i+1]) for i in range(len(m_list) - 1)]
@@ -673,46 +689,75 @@ def Flc_imf(imf, Mbh=1e3*c.msun, nbin=50, lambda_disk=1, mass_weighted=False, Md
     imf_norm = 0.
     masses = mass_bins.tolist() if imf is not None else []
     dF_dm = np.empty(n_mass_bins, dtype=float) if imf is not None else []
+
     for i in range(n_mass_bins):
         m = mass_bins[i]
         gamma_cluster = gamma_clusters[i]
         r = stellar_radii[i]
-        s = star_disk(Mbh=Mbh,
-                    ms=m*c.msun,
-                    rs=r*c.rsun,
-                    lambda_disk=lambda_disk,
-                    alpha_disk=alpha_disk,
-                    Q_disk=q_disk,
-                    ms_mean=ms_mean,
-                    gamma=gamma_cluster,
-                    Mdisk=Mdisk,
-                    gamma_disk=gamma_disk,
-                    rmax_in_rh=rmax_in_rh,
-                    sigma_h=sigma_h,
-                    )           
-        rt = 1*(s.Mbh/s.ms)**(1./3.)*s.rs  # specify the tidal radius
+        s = star_disk(
+            Mbh=Mbh,
+            ms=m * c.msun,
+            rs=r * c.rsun,
+            lambda_disk=lambda_disk,
+            alpha_disk=alpha_disk,
+            Q_disk=q_disk,
+            ms_mean=ms_mean,
+            gamma=gamma_cluster,
+            Mdisk=Mdisk,
+            gamma_disk=gamma_disk,
+            rmax_in_rh=rmax_in_rh,
+            sigma_h=sigma_h,
+        )
+        rt = 1 * (s.Mbh / s.ms)**(1./3.) * s.rs
         if binary_seperation_in_solar is not None:
-            rt *= binary_seperation_in_solar # larger TDE radius for binaries
-        rt_sun = 1*(s.Mbh/c.msun)**(1./3.)*c.rsun  # specify the tidal radius
-        alist = np.logspace(max(np.log10(s.n.r_h/s.n.c.pc)-4, np.log10(rt_sun/s.n.c.pc)+3), 
-                            np.log10(s.n.r_h/s.n.c.pc)+3, 50)*s.n.c.pc
+            rt *= binary_seperation_in_solar
+        rt_sun = 1 * (s.Mbh / c.msun)**(1./3.) * c.rsun
+        alist = np.logspace(
+            max(np.log10(s.n.r_h / s.n.c.pc) - 4, np.log10(rt_sun / s.n.c.pc) + 3),
+            np.log10(s.n.r_h / s.n.c.pc) + 3, 50
+        ) * s.n.c.pc
+
         if not full_loss_cone:
-            rlcd = r_lc_mixed(alist, s, s.rs, s.ms, s.Mbh, tdisk, tidal_capture, binary_seperation_in_solar) # newly defined loss cone radius
-            dr = flux_lc_mixed(s.n.E(alist), s, rlcd, tde=tde) # flux dF/dE
-            drf = simpson_integrate_flux_lc_mixed(
-                s.n.E(s.n.r_h),
-                s.n.E(alist[0]),
-                s,
-                rt,
-                tdisk=tdisk,
-                tidal_capture=tidal_capture,
-                tde=tde,
-                nE=nE,
-            ) * s.n.c.yr
-            drf = max(drf, 0) # for safety, avoid negative rates due to numerical issues
+            # OPT: compute r_lc_disk on alist once; reuse for both dr and drf
+            rlcd_alist = r_lc_disk(alist, s, s.rs, s.ms, tdisk, tidal_capture)
+            rg = 2 * c.G * s.Mbh / (c.c**2)
+            rt_eff = rt  # already scaled by binary_seperation_in_solar above
+            # vectorised equivalent of _r_lc_mixed_scalar: max(rd, rt, rg) per point
+            rlcd = np.maximum(np.maximum(rlcd_alist, rt_eff), rg)
+
+            dr = flux_lc_mixed(s.n.E(alist), s, rlcd, tde=tde)
+
+            # OPT: build the Simpson sma grid and interpolate rlcd_disk onto it
+            # instead of solving brentq 101 more times over the same sma range.
+            E_min_s = s.n.E(s.n.r_h)
+            E_max_s = s.n.E(alist[0])
+            if E_max_s > E_min_s:
+                nE_ = nE if nE % 2 == 1 else nE + 1
+                E_simpson = np.geomspace(E_min_s, E_max_s, nE_)
+                a_simpson = s.n.a(E_simpson)
+                # alist is monotone in sma; interpolate in log-space for accuracy
+                # across the many orders of magnitude rlcd spans
+                rlcd_simpson = np.exp(np.interp(
+                    np.log(a_simpson),
+                    np.log(alist),
+                    np.log(rlcd_alist),
+                ))
+                drf = simpson_integrate_flux_lc_mixed(
+                    E_min_s, E_max_s, s, rt,
+                    tdisk=tdisk,
+                    tidal_capture=tidal_capture,
+                    tde=tde,
+                    nE=nE_,
+                    precomputed_rlcd=rlcd_simpson,  # OPT: skip brentq inside
+                ) * s.n.c.yr
+            else:
+                drf = 0.0
+
+            drf = max(drf, 0)
         else:
             dr = s.n.flux_flc(s.n.E(alist), rt)
-            drf = 0 # not meaningful for full loss cone, ignore it
+            drf = 0
+
         if imf is not None:
             imf_frac = imf_fracs[i]
             dr *= imf_frac
@@ -727,6 +772,7 @@ def Flc_imf(imf, Mbh=1e3*c.msun, nbin=50, lambda_disk=1, mass_weighted=False, Md
         res_f += drf
         if imf is not None:
             dF_dm[i] = drf / (m_list[i+1] - m_list[i])
+
     if imf is not None:
         res /= imf_norm
         res_f /= imf_norm
